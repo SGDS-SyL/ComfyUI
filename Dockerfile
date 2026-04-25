@@ -89,6 +89,28 @@ ENV PIP_NO_INPUT=1
 COPY scripts/comfy-manager-set-mode.sh /usr/local/bin/comfy-manager-set-mode
 RUN chmod +x /usr/local/bin/comfy-manager-set-mode
 
+# Install VHS (Video Helper Suite)
+RUN git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite /comfyui/custom_nodes/ComfyUI-VideoHelperSuite \
+    && uv pip install -r /comfyui/custom_nodes/ComfyUI-VideoHelperSuite/requirements.txt
+
+# Install comfyui-reactor-node (Codeberg, not in ComfyUI registry)
+RUN git clone https://codeberg.org/Gourieff/comfyui-reactor-node /comfyui/custom_nodes/comfyui-reactor-node \
+    && uv pip install insightface onnxruntime-gpu \
+    && uv pip install -r /comfyui/custom_nodes/comfyui-reactor-node/requirements.txt
+
+# Download ReactorNode required face models
+RUN mkdir -p /comfyui/models/insightface/models /comfyui/models/facerestore_models \
+    && wget -q -O /comfyui/models/insightface/inswapper_128.onnx \
+       "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/inswapper_128.onnx" \
+    && wget -q -O /tmp/buffalo_l.zip \
+       "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/buffalo_l.zip" \
+    && python -c "import zipfile; zipfile.ZipFile('/tmp/buffalo_l.zip').extractall('/comfyui/models/insightface/models/')" \
+    && rm /tmp/buffalo_l.zip \
+    && wget -q -O /comfyui/models/facerestore_models/GFPGANv1.4.pth \
+       "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/facerestore_models/GFPGANv1.4.pth" \
+    && wget -q -O /comfyui/models/facerestore_models/codeformer-v0.1.0.pth \
+       "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/facerestore_models/codeformer-v0.1.0.pth"
+
 # Set the default command to run when starting the container
 CMD ["/start.sh"]
 
