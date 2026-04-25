@@ -96,11 +96,11 @@ RUN chmod +x /usr/local/bin/comfy-manager-set-mode
 RUN comfy-node-install \
     comfyui-videohelpersuite \
     comfyui-frame-interpolation \
-    comfyui-mixlab-nodes
+    comfyui-mixlab-nodes \
+    comfyui-reactor-node
 
-# Install comfyui-reactor-node (Codeberg, not in ComfyUI registry)
-RUN comfy --workspace /comfyui node install --git-url https://codeberg.org/Gourieff/comfyui-reactor-node \
-    && uv pip install insightface "onnxruntime-gpu==1.18.0"
+# Install GPU-specific deps required by reactor-node not covered by its registry install
+RUN uv pip install insightface "onnxruntime-gpu==1.18.0"
 
 # Download ReactorNode required face models
 RUN comfy --workspace /comfyui model download \
