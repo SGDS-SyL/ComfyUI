@@ -111,6 +111,19 @@ RUN mkdir -p /comfyui/models/insightface/models /comfyui/models/facerestore_mode
     && wget -q -O /comfyui/models/facerestore_models/codeformer-v0.1.0.pth \
        "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/facerestore_models/codeformer-v0.1.0.pth"
 
+# Install ComfyUI-Frame-Interpolation (provides FILM VFI node)
+RUN git clone https://github.com/Fannovel16/ComfyUI-Frame-Interpolation /comfyui/custom_nodes/ComfyUI-Frame-Interpolation \
+    && uv pip install -r /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/requirements.txt
+
+# Download FILM VFI model
+RUN mkdir -p /comfyui/models/frame_interpolation/FILM \
+    && wget -q -O /comfyui/models/frame_interpolation/FILM/film_net_fp32.pt \
+       "https://huggingface.co/jkawamoto/frame-interpolation-pytorch/resolve/main/film_net_fp32.pt"
+
+# Install comfyui-mixlab-nodes (provides LoadImagesFromURL)
+RUN git clone https://github.com/shadowcz007/comfyui-mixlab-nodes /comfyui/custom_nodes/comfyui-mixlab-nodes \
+    && uv pip install -r /comfyui/custom_nodes/comfyui-mixlab-nodes/requirements.txt
+
 # Set the default command to run when starting the container
 CMD ["/start.sh"]
 
