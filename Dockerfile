@@ -100,124 +100,25 @@ RUN comfy-node-install \
     comfyui-reactor-node
 
 # Download ReactorNode required face models
-RUN comfy --workspace /comfyui model download \
+RUN comfy model download \
         --url "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/inswapper_128.onnx" \
         --relative-path models/insightface \
-    && comfy --workspace /comfyui model download \
+    && comfy model download \
         --url "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/buffalo_l.zip" \
         --relative-path models/insightface \
     && python -c "import zipfile; zipfile.ZipFile('/comfyui/models/insightface/buffalo_l.zip').extractall('/comfyui/models/insightface/models/')" \
     && rm /comfyui/models/insightface/buffalo_l.zip \
-    && comfy --workspace /comfyui model download \
+    && comfy model download \
         --url "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/facerestore_models/GFPGANv1.4.pth" \
         --relative-path models/facerestore_models \
-    && comfy --workspace /comfyui model download \
+    && comfy model download \
         --url "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/facerestore_models/codeformer-v0.1.0.pth" \
         --relative-path models/facerestore_models
 
 # Download FILM VFI model
-RUN comfy --workspace /comfyui model download \
+RUN comfy download \
     --url "https://huggingface.co/jkawamoto/frame-interpolation-pytorch/resolve/main/film_net_fp32.pt" \
     --relative-path models/frame_interpolation/FILM
 
 # Set the default command to run when starting the container
 CMD ["/start.sh"]
-
-# Stage 2: Download models
-FROM base AS downloader
-
-ARG HUGGINGFACE_ACCESS_TOKEN
-# Set default model type if none is provided
-ARG MODEL_TYPE=none
-
-# Change working directory to ComfyUI
-WORKDIR /comfyui
-
-# Create necessary directories upfront
-RUN mkdir -p models/checkpoints models/vae models/unet models/clip models/text_encoders models/diffusion_models models/model_patches
-
-# Download checkpoints/vae/unet/clip models to include in image based on model type
-RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
-      comfy --workspace /comfyui model download \
-          --url https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors \
-          --relative-path models/checkpoints \
-      && comfy --workspace /comfyui model download \
-          --url https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors \
-          --relative-path models/vae \
-      && comfy --workspace /comfyui model download \
-          --url https://huggingface.co/madebyollin/sdxl-vae-fp16-fix/resolve/main/sdxl_vae.safetensors \
-          --relative-path models/vae \
-          --filename sdxl-vae-fp16-fix.safetensors; \
-    fi
-
-RUN if [ "$MODEL_TYPE" = "sd3" ]; then \
-      comfy --workspace /comfyui model download \
-          --url https://huggingface.co/stabilityai/stable-diffusion-3-medium/resolve/main/sd3_medium_incl_clips_t5xxlfp8.safetensors \
-          --relative-path models/checkpoints \
-          --hf-token "${HUGGINGFACE_ACCESS_TOKEN}"; \
-    fi
-
-RUN if [ "$MODEL_TYPE" = "flux1-schnell" ]; then \
-      comfy --workspace /comfyui model download \
-          --url https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors \
-          --relative-path models/unet \
-          --hf-token "${HUGGINGFACE_ACCESS_TOKEN}" \
-      && comfy --workspace /comfyui model download \
-          --url https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors \
-          --relative-path models/clip \
-      && comfy --workspace /comfyui model download \
-          --url https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors \
-          --relative-path models/clip \
-      && comfy --workspace /comfyui model download \
-          --url https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors \
-          --relative-path models/vae \
-          --hf-token "${HUGGINGFACE_ACCESS_TOKEN}"; \
-    fi
-
-RUN if [ "$MODEL_TYPE" = "flux1-dev" ]; then \
-      comfy --workspace /comfyui model download \
-          --url https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors \
-          --relative-path models/unet \
-          --hf-token "${HUGGINGFACE_ACCESS_TOKEN}" \
-      && comfy --workspace /comfyui model download \
-          --url https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors \
-          --relative-path models/clip \
-      && comfy --workspace /comfyui model download \
-          --url https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors \
-          --relative-path models/clip \
-      && comfy --workspace /comfyui model download \
-          --url https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors \
-          --relative-path models/vae \
-          --hf-token "${HUGGINGFACE_ACCESS_TOKEN}"; \
-    fi
-
-RUN if [ "$MODEL_TYPE" = "flux1-dev-fp8" ]; then \
-      comfy --workspace /comfyui model download \
-          --url https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors \
-          --relative-path models/checkpoints; \
-    fi
-
-RUN if [ "$MODEL_TYPE" = "z-image-turbo" ]; then \
-      comfy --workspace /comfyui model download \
-          --url https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors \
-          --relative-path models/text_encoders \
-          --hf-token "${HUGGINGFACE_ACCESS_TOKEN}" \
-      && comfy --workspace /comfyui model download \
-          --url https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors \
-          --relative-path models/diffusion_models \
-          --hf-token "${HUGGINGFACE_ACCESS_TOKEN}" \
-      && comfy --workspace /comfyui model download \
-          --url https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors \
-          --relative-path models/vae \
-          --hf-token "${HUGGINGFACE_ACCESS_TOKEN}" \
-      && comfy --workspace /comfyui model download \
-          --url https://huggingface.co/alibaba-pai/Z-Image-Turbo-Fun-Controlnet-Union/resolve/main/Z-Image-Turbo-Fun-Controlnet-Union.safetensors \
-          --relative-path models/model_patches \
-          --hf-token "${HUGGINGFACE_ACCESS_TOKEN}"; \
-    fi
-
-# Stage 3: Final image
-FROM base AS final
-
-# Copy models from stage 2 to the final image
-COPY --from=downloader /comfyui/models /comfyui/models
