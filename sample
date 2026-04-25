@@ -32,9 +32,6 @@ RUN apt-get update && apt-get install -y \
     libxrender1 \
     ffmpeg \
     openssh-server \
-    build-essential \
-    cmake \
-    libopenblas-dev \
     && ln -sf /usr/bin/python3.12 /usr/bin/python \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
@@ -92,41 +89,6 @@ ENV PIP_NO_INPUT=1
 COPY scripts/comfy-manager-set-mode.sh /usr/local/bin/comfy-manager-set-mode
 RUN chmod +x /usr/local/bin/comfy-manager-set-mode
 
-# Install VHS (Video Helper Suite)
-RUN git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite /comfyui/custom_nodes/ComfyUI-VideoHelperSuite \
-    && uv pip install -r /comfyui/custom_nodes/ComfyUI-VideoHelperSuite/requirements.txt
-
-# Install comfyui-reactor-node (Codeberg, not in ComfyUI registry)
-RUN git clone https://codeberg.org/Gourieff/comfyui-reactor-node /comfyui/custom_nodes/comfyui-reactor-node \
-    && uv pip install insightface "onnxruntime-gpu==1.18.0" \
-    && uv pip install -r /comfyui/custom_nodes/comfyui-reactor-node/requirements.txt
-
-# Download ReactorNode required face models
-RUN mkdir -p /comfyui/models/insightface/models /comfyui/models/facerestore_models \
-    && wget -q -O /comfyui/models/insightface/inswapper_128.onnx \
-       "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/inswapper_128.onnx" \
-    && wget -q -O /tmp/buffalo_l.zip \
-       "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/buffalo_l.zip" \
-    && python -c "import zipfile; zipfile.ZipFile('/tmp/buffalo_l.zip').extractall('/comfyui/models/insightface/models/')" \
-    && rm /tmp/buffalo_l.zip \
-    && wget -q -O /comfyui/models/facerestore_models/GFPGANv1.4.pth \
-       "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/facerestore_models/GFPGANv1.4.pth" \
-    && wget -q -O /comfyui/models/facerestore_models/codeformer-v0.1.0.pth \
-       "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/facerestore_models/codeformer-v0.1.0.pth"
-
-# Install ComfyUI-Frame-Interpolation (provides FILM VFI node)
-RUN git clone https://github.com/Fannovel16/ComfyUI-Frame-Interpolation /comfyui/custom_nodes/ComfyUI-Frame-Interpolation \
-    && uv pip install -r /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/requirements.txt
-
-# Download FILM VFI model
-RUN mkdir -p /comfyui/models/frame_interpolation/FILM \
-    && wget -q -O /comfyui/models/frame_interpolation/FILM/film_net_fp32.pt \
-       "https://huggingface.co/jkawamoto/frame-interpolation-pytorch/resolve/main/film_net_fp32.pt"
-
-# Install comfyui-mixlab-nodes (provides LoadImagesFromURL)
-RUN git clone https://github.com/shadowcz007/comfyui-mixlab-nodes /comfyui/custom_nodes/comfyui-mixlab-nodes \
-    && uv pip install -r /comfyui/custom_nodes/comfyui-mixlab-nodes/requirements.txt
-
 # Set the default command to run when starting the container
 CMD ["/start.sh"]
 
@@ -135,7 +97,7 @@ FROM base AS downloader
 
 ARG HUGGINGFACE_ACCESS_TOKEN
 # Set default model type if none is provided
-ARG MODEL_TYPE=none
+ARG MODEL_TYPE=flux1-dev-fp8
 
 # Change working directory to ComfyUI
 WORKDIR /comfyui
