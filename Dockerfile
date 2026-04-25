@@ -99,13 +99,6 @@ RUN comfy-node-install \
     comfyui-mixlab-nodes \
     comfyui-reactor-node
 
-# Install GPU-specific deps required by reactor-node not covered by its registry install.
-# Cython is required to compile insightface from source (no Python 3.12 wheel available).
-# Force-reinstall onnxruntime-gpu to replace the CPU-only onnxruntime the registry install pulls in.
-RUN uv pip install Cython \
-    && uv pip install insightface \
-    && uv pip install --force-reinstall "onnxruntime-gpu==1.18.0"
-
 # Download ReactorNode required face models
 RUN comfy --workspace /comfyui model download \
         --url "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/inswapper_128.onnx" \
